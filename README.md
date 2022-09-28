@@ -1,11 +1,15 @@
-# contracts-public
+# arcnes-contracts-public
 
-ArtLake NEAR public contracts
+Arcnes public contracts
 
 ## Commands
 
-### Build all contracts
-`sh build.sh`
+`yarn build` - build all contracts \
+`yarn lint` - run linter \
+`yarn test` - run unit tests \
+`yarn test:unit` - run unit tests
 
-### Test all contracts
-`cargo test -- --nocapture`
+## Deploy contract
+
+1. `near create-account CONTRACT_ACCOUNT --masterAccount YOUR_ACCOUNT_HERE --initialBalance 10`
+2. `near deploy --wasmFile artifacts/CONTRACT_BINARY.wasm --accountId CONTRACT_ACCOUNT`

@@ -1,0 +1,27 @@
+{
+  "name": "artlake-contracts-public",
+  "version": "1.0.0",
+  "license": "MIT",
+  "engines": {
+    "npm": ">=8.0.0",
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "lint": "cargo clippy",
+    "build": "sh build.sh",
+    "test": "yarn test:unit",
+    "test:unit": "cargo test --all -- --nocapture --color always"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/arcnes-com/arcnes-contracts-public.git"
+  },
+  "bugs": {
+    "url": "https://github.com/arcnes-com/arcnes-contracts-public/issues"
+  },
+  "devDependencies": {
+  },
+  "dependencies": {
+    "yarn": "^1.22.19"
+  }
+}

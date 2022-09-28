@@ -1,15 +1,27 @@
 # NFT
 
-ArtLake NFT contract
+Arcnes NFT contract
+
+This contract is extension of the token standard and covers features:
+* Core logic [NEP-171](https://github.com/near/NEPs/blob/master/neps/nep-0171.md)
+* Metadata [NEP-177](https://github.com/near/NEPs/blob/master/neps/nep-0177.md)
+* Approvals [NEP-178](https://github.com/near/NEPs/blob/master/neps/nep-0178.md)
+* Enumeration [NEP-181](https://github.com/near/NEPs/blob/master/neps/nep-0181.md)
+* Royalties [NEP-199](https://github.com/near/NEPs/blob/master/neps/nep-0199.md)
+* Metadata update by NFT contract owner
+* Royalties update by NFT contract owner
+* NFT mint by NFT contract owner
+* NFT burn by NFT contract owner
+* Locking mechanism for metadata and royalties update (only for NFT contract owner)
 
 ## Interface
 
 ### Calls
 
-The nft contract was deployed on `nft_test.artlake.testnet` account.
+The testnet nft contract was deployed on `nft001.arcnes.testnet` account.
 
 ```
-export NFT_CONTRACT_ID="nft_test.artlake.testnet"
+export NFT_CONTRACT_ID="nft001.arcnes.testnet"
 export ACCOUNT_ID="your_account"
 ```
 
