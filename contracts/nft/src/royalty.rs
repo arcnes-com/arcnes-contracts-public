@@ -11,6 +11,16 @@ use crate::events::SetRoyalty;
 // Royalty percentages
 pub type Royalty = HashMap<AccountId, u32>;
 
+pub fn assert_valid_royalty(royalty: &Royalty) {
+    // Check if max number of royalties is not exceeded
+    assert!(royalty.len() < 7, "Cannot add more than 6 royalty amounts");
+
+    // Check if royalties doesn't exceed 100%
+    let amounts: Vec<u32> = royalty.values().cloned().collect();
+    let sum: u32 = amounts.iter().sum();
+    assert!(sum < 10_000u32, "Cannot set 100% or more for royalties");
+}
+
 #[derive(Serialize, Deserialize)]
 #[serde(crate = "near_sdk::serde")]
 pub struct Payout {
@@ -159,6 +169,8 @@ impl NonFungibleTokenRoyalty for Contract {
 
         // Check if function is not locked
         assert!(!self.is_locked, "Locked function");
+
+        assert_valid_royalty(&royalty);
 
         let previous_royalty = self.royalty.get().unwrap_or_default();
         self.royalty.set(&royalty);

@@ -26,7 +26,7 @@ use near_sdk::{AccountId, assert_one_yocto, BorshStorageKey, env, near_bindgen, 
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::LazyOption;
 
-use crate::royalty::Royalty;
+use crate::royalty::{assert_valid_royalty, Royalty};
 
 mod royalty;
 mod metadata;
@@ -81,6 +81,9 @@ impl Contract {
     #[init]
     pub fn new(owner_id: AccountId, metadata: NFTContractMetadata, royalty: Royalty) -> Self {
         assert!(!env::state_exists(), "Already initialized");
+
+        assert_valid_royalty(&royalty);
+
         metadata.assert_valid();
         Self {
             tokens: NonFungibleToken::new(
