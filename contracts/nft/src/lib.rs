@@ -33,6 +33,9 @@ mod metadata;
 mod events;
 mod lock;
 
+const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
+const CONTRACT_STANDARD: &str = "arcnes_nft";
+
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
 pub struct Contract {

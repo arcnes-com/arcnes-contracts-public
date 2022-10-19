@@ -1,11 +1,14 @@
+use std::fmt;
+
 use near_contract_standards::non_fungible_token::metadata::TokenMetadata;
 use near_sdk::{env, serde_json};
-use near_sdk::serde::Serialize;
+use near_sdk::serde::{Deserialize, Serialize};
+use crate::{CONTRACT_STANDARD, CONTRACT_VERSION};
 
 use crate::royalty::Royalty;
 
 #[must_use]
-#[derive(Serialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(crate = "near_sdk::serde")]
 pub struct SetRoyalty {
     pub previous_royalty: Royalty,
@@ -15,12 +18,12 @@ pub struct SetRoyalty {
 impl SetRoyalty {
     /// Logs the event to the host.
     pub fn emit(self) {
-        NFTExtensionsEventKind::SetRoyalty(&self).emit()
+        new_log(NFTExtensionsEventKind::SetRoyalty(self)).emit()
     }
 }
 
 #[must_use]
-#[derive(Serialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(crate = "near_sdk::serde")]
 pub struct SetTokenMetadata {
     pub token_id: String,
@@ -31,34 +34,96 @@ pub struct SetTokenMetadata {
 impl SetTokenMetadata {
     /// Logs the event to the host.
     pub fn emit(self) {
-        NFTExtensionsEventKind::SetTokenMetadata(&self).emit()
+        new_log(NFTExtensionsEventKind::SetTokenMetadata(self)).emit()
     }
 }
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(crate = "near_sdk::serde")]
 #[serde(tag = "event", content = "data")]
 #[serde(rename_all = "snake_case")]
 #[allow(clippy::enum_variant_names)]
-enum NFTExtensionsEventKind<'a> {
-    SetRoyalty(&'a SetRoyalty),
-    SetTokenMetadata(&'a SetTokenMetadata),
+pub enum NFTExtensionsEventKind {
+    SetRoyalty(SetRoyalty),
+    SetTokenMetadata(SetTokenMetadata),
 }
 
-impl<'a> NFTExtensionsEventKind<'a> {
-    fn to_json_string(&self) -> String {
-        // Events cannot fail to serialize so fine to panic on error
-        #[allow(clippy::redundant_closure)]
-        serde_json::to_string(self).ok().unwrap_or_else(|| env::abort())
-    }
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(crate = "near_sdk::serde")]
+pub struct EventLog {
+    pub standard: String,
+    pub version: String,
 
-    fn to_json_event_string(&self) -> String {
-        format!("EVENT_JSON:{}", self.to_json_string())
-    }
+    // `flatten` to not have "event": {<EventLogVariant>} in the JSON, just have the contents of {<EventLogVariant>}.
+    #[serde(flatten)]
+    pub event: NFTExtensionsEventKind,
+}
 
-    /// Logs the event to the host. This is required to ensure that the event is triggered
-    /// and to consume the event.
+impl EventLog {
     pub(crate) fn emit(self) {
-        env::log_str(&self.to_json_event_string());
+        env::log_str(&self.to_string());
+    }
+}
+
+impl fmt::Display for EventLog {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_fmt(format_args!(
+            "EVENT_JSON:{}",
+            &serde_json::to_string(self).map_err(|_| fmt::Error)?
+        ))
+    }
+}
+
+fn new_log(event_variant: NFTExtensionsEventKind) -> EventLog {
+    EventLog {
+        standard: CONTRACT_STANDARD.to_string(),
+        version: CONTRACT_VERSION.to_string(),
+        event: event_variant,
+    }
+}
+
+#[cfg(all(test, not(target_arch = "wasm32")))]
+mod tests {
+    use std::collections::HashMap;
+    use near_sdk::{AccountId, test_utils};
+
+    use super::*;
+
+    #[test]
+    fn set_royalty_event() {
+        let expected = r#"EVENT_JSON:{"standard":"arcnes_nft","version":"1.0.0","event":"set_royalty","data":{"previous_royalty":{},"new_royalty":{"test.near":200}}}"#;
+        let event = SetRoyalty {
+            previous_royalty: Default::default(),
+            new_royalty: HashMap::from([(AccountId::new_unchecked("test.near".to_string()), 200)])
+        };
+
+        event.emit();
+        assert_eq!(test_utils::get_logs()[0], expected);
+    }
+
+    #[test]
+    fn set_token_metadata_event() {
+        let expected = r#"EVENT_JSON:{"standard":"arcnes_nft","version":"1.0.0","event":"set_token_metadata","data":{"token_id":"1","previous_token_metadata":null,"new_token_metadata":{"title":null,"description":null,"media":null,"media_hash":null,"copies":null,"issued_at":null,"expires_at":null,"starts_at":null,"updated_at":null,"extra":null,"reference":null,"reference_hash":null}}}"#;
+        let event = SetTokenMetadata {
+            token_id: "1".to_string(),
+            previous_token_metadata: None,
+            new_token_metadata: TokenMetadata {
+                title: None,
+                description: None,
+                media: None,
+                media_hash: None,
+                copies: None,
+                issued_at: None,
+                expires_at: None,
+                starts_at: None,
+                updated_at: None,
+                extra: None,
+                reference: None,
+                reference_hash: None
+            }
+        };
+
+        event.emit();
+        assert_eq!(test_utils::get_logs()[0], expected);
     }
 }
